@@ -74,6 +74,84 @@ if(window.location == "https://www.instagram.com/"){
 }
 /** END **/
 
+/** suggested_posts **/
+const suggestedThreeDayMs = 3 * 24 * 60 * 60 * 1000;
+const suggestedCutoff = Date.now() - suggestedThreeDayMs;
+const suggestedMarkerTexts = ['Suggested for you', 'Suggested posts', 'Suggested Posts', 'Suggested for You'];
+const suggestedMain = document.querySelector('main');
+if (suggestedMain) {
+    const suggestedSpans = suggestedMain.querySelectorAll('span');
+    let suggestedSectionMarker = null;
+    for (let suggestedIdx = 0; suggestedIdx < suggestedSpans.length; suggestedIdx++) {
+        const suggestedSpan = suggestedSpans[suggestedIdx];
+        if (suggestedSpan.children.length > 0) continue;
+        const suggestedText = (suggestedSpan.textContent || '').trim();
+        if (suggestedMarkerTexts.indexOf(suggestedText) < 0) continue;
+        suggestedSectionMarker = suggestedSpan;
+        break;
+    }
+    if (suggestedSectionMarker) {
+        let suggestedGateOpen = false;
+        for (let suggestedIdx = 0; suggestedIdx < suggestedSpans.length; suggestedIdx++) {
+            const suggestedCaughtUpText = (suggestedSpans[suggestedIdx].textContent || '').trim();
+            if (suggestedCaughtUpText.indexOf('caught up') >= 0 || suggestedCaughtUpText.indexOf('Caught Up') >= 0) {
+                suggestedGateOpen = true;
+                break;
+            }
+        }
+        if (!suggestedGateOpen) {
+            const suggestedFeedArticles = suggestedMain.querySelectorAll('article');
+            const suggestedRecentFollowed = [];
+            for (let suggestedIdx = 0; suggestedIdx < suggestedFeedArticles.length; suggestedIdx++) {
+                const suggestedArticle = suggestedFeedArticles[suggestedIdx];
+                if (suggestedSectionMarker.compareDocumentPosition(suggestedArticle) & Node.DOCUMENT_POSITION_FOLLOWING) continue;
+                let suggestedIsMarked = false;
+                const suggestedInnerSpans = suggestedArticle.querySelectorAll('span');
+                for (let suggestedJ = 0; suggestedJ < suggestedInnerSpans.length; suggestedJ++) {
+                    if (suggestedMarkerTexts.indexOf((suggestedInnerSpans[suggestedJ].textContent || '').trim()) >= 0) {
+                        suggestedIsMarked = true;
+                        break;
+                    }
+                }
+                if (suggestedIsMarked) continue;
+                const suggestedTimeEl = suggestedArticle.querySelector('time[datetime]');
+                if (!suggestedTimeEl) continue;
+                const suggestedTs = Date.parse(suggestedTimeEl.getAttribute('datetime'));
+                if (!isNaN(suggestedTs) && suggestedTs >= suggestedCutoff) suggestedRecentFollowed.push(suggestedArticle);
+            }
+            if (suggestedRecentFollowed.length > 0) {
+                suggestedGateOpen = true;
+                for (let suggestedIdx = 0; suggestedIdx < suggestedRecentFollowed.length; suggestedIdx++) {
+                    if (suggestedRecentFollowed[suggestedIdx].getBoundingClientRect().bottom > window.innerHeight) {
+                        suggestedGateOpen = false;
+                        break;
+                    }
+                }
+            } else {
+                suggestedGateOpen = true;
+            }
+        }
+        if (suggestedGateOpen) {
+            const suggestedFeedArticles = suggestedMain.querySelectorAll('article');
+            for (let suggestedIdx = 0; suggestedIdx < suggestedFeedArticles.length; suggestedIdx++) {
+                const suggestedArticle = suggestedFeedArticles[suggestedIdx];
+                if (suggestedSectionMarker.compareDocumentPosition(suggestedArticle) & Node.DOCUMENT_POSITION_FOLLOWING) {
+                    suggestedArticle.style.display = 'none';
+                }
+            }
+            let suggestedHeaderWrap = suggestedSectionMarker.parentElement;
+            for (let suggestedDepth = 0; suggestedDepth < 8 && suggestedHeaderWrap && suggestedHeaderWrap !== suggestedMain; suggestedDepth++) {
+                if (!suggestedHeaderWrap.querySelector('article')) {
+                    suggestedHeaderWrap.style.display = 'none';
+                    break;
+                }
+                suggestedHeaderWrap = suggestedHeaderWrap.parentElement;
+            }
+        }
+    }
+}
+/** END **/
+
 /** show_unread_message_count **/
 const unread_message_count = document.querySelector('div[class="x4fivb0 xmn1u35 x10l6tqk xn0lweg x1vjfegm"]');
 if(unread_message_count){
